@@ -1,130 +1,15 @@
-// /* global roboflow */
-// import React, { useState, useEffect } from "react";
-// // import roboflow from "roboflow";
-// // import workspaceInfo from roboflow.getWorkflow(workspaceUrl, apiKey);
-// // const workspaceInfo = roboflow.getWorkspace(workspaceUrl, apiKey);
-
-// export default function ImageCapture(props) {
-//   const [data, setData] = useState(null);
-//   const [url, setUrl] = useState("");
-//   const [show, setShow] = useState(false);
-
-//   useEffect(() => {
-//     async function getModel() {
-//       console.log("abasjfhjsb");
-//       var model = await roboflow
-//         .auth({
-//           publishable_key:
-//             "rf_OIlstLKOu2ZL5h5XUhaWfKrzMhl1" ||
-//             `${process.env.REACT_APP_API_KEY}`,
-//         })
-//         .load({
-//           model: "farm-animal-detection-ezvtk",
-//           version: 2,
-//         });
-
-//       return model;
-//     }
-
-//     console.log(process.env.REACT_APP_API_KEY);
-//     var initialized_model = getModel();
-//     console.log(initialized_model);
-//     initialized_model.then(function (model) {
-//       // use model.detect() to make a prediction (see "Getting Predictions" below)
-//       // model.detect(imgURL).then(function (predictions) {
-//       //   console.log("Predictions:", predictions);
-//       // });
-
-//       model.detect(document.getElementById("abc")).then(function (predictions) {
-//         console.log("Predictions:", predictions);
-//       });
-//     });
-//   }, []);
-
-//   useEffect(() => {
-//     const HandleCapClick = async () => {
-//       // Get the real-time video data from the camera using API.
-//       fetch(url)
-//         .then((response) => {
-//           if (!response.ok) {
-//             throw new Error(`HTTP error! Status: ${response.status}`);
-//           }
-//           return response.json();
-//         })
-//         .then((json) => setData(json))
-//         .catch((error) => console.error("Error fetching data:", error));
-//     };
-//     HandleCapClick();
-//   }, [url]);
-
-//   return (
-//     <div className="container my-3 mt-4">
-//       <img
-//         id="abc"
-//         src="./Nilgai_(Boselaphus_tragocamelus)_male.jpg"
-//         alt="Input Image"
-//         style={{ display: "none" }}
-//       />
-//       <h2>Capturing Video Data</h2>
-//       <div className="container my-3">
-//         <div
-//           style={{
-//             width: "800px",
-//             height: "350px",
-//             border: "2px solid",
-//             boxShadow: "5px 5px 8px rgba(0, 0, 0, 2)",
-//             borderRadius: "8px",
-//           }}
-//         >
-//           {show && data ? (
-//             <pre>{JSON.stringify(data, null, 2)}</pre>
-//           ) : (
-//             "Click on Start Capture to begin !"
-//           )}
-//         </div>
-//         <button
-//           type="button"
-//           onClick={() => {
-//             setUrl("https://detect.roboflow.com/farm-animal-detection-ezvtk/2");
-//             setShow(true);
-//           }}
-//           className={`btn btn-${
-//             props.mode === "light" ? "dark" : "light"
-//           } my-3`}
-//         >
-//           Start Capture
-//         </button>
-//         <button
-//           type="button"
-//           onClick={() => {
-//             setUrl("");
-//             setShow(false);
-//           }}
-//           className={`btn btn-${
-//             props.mode === "light" ? "dark" : "light"
-//           } my-3 mx-2`}
-//         >
-//           Stop Capture
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }
-
-/* global roboflow */
-/* global roboflow */
 /* global roboflow */
 import React, { useState, useEffect, useRef } from "react";
 
 export default function ImageCapture(props) {
   const [data, setData] = useState([]);
   const [url, setUrl] = useState("");
-  const [show, setShow] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [play, setPlay] = useState(false);
-  const videoRef = useRef(null);
+  const videoRef = useRef();
   const intervalRef = useRef(null);
   const audioRef = useRef(new Audio("/deathnote-sound.mpeg"));
+  const [threshold, setThreshold] = useState("0.5");
 
   useEffect(() => {
     async function getModel() {
@@ -132,15 +17,13 @@ export default function ImageCapture(props) {
       var model = await roboflow
         .auth({
           publishable_key:
-            "rf_OIlstLKOu2ZL5h5XUhaWfKrzMhl1" ||
-            `${process.env.REACT_APP_API_KEY}`,
-        })
+            "rf_OIlstLKOu2ZL5h5XUhaWfKrzMhl1"})
         .load({
           model: "farm-animal-detection-ezvtk",
           version: 2,
         });
       model.configure({
-        threshold: 0.5,
+        threshold,
         overlap: 0.5,
         max_objects: 1,
       });
@@ -148,29 +31,29 @@ export default function ImageCapture(props) {
     }
 
     console.log("Initializing model...");
-    var initialized_model = getModel();
-
-    initialized_model.then(function (model) {
+    getModel().then((model) => {
       console.log("Model initialized.");
       intervalRef.current = setInterval(() => {
-        model.detect(videoRef.current).then(function (predictions) {
-          console.log("Predictions:", predictions);
-          if (predictions.length > 0) {
-            console.log("playing sound");
-            setPlay(true);
-          } else {
-            console.log("stopping sound");
-            setPlay(false);
-          }
-          setData(predictions);
-        });
-      }, 1000);
+        if (isCapturing) {
+          model.detect(videoRef.current).then(function (predictions) {
+            console.log("Predictions:", predictions);
+            if (predictions.length > 0) {
+              console.log("playing sound");
+              setPlay(true);
+            } else {
+              console.log("stopping sound");
+              setPlay(false);
+            }
+            setData(predictions);
+          });
+        }
+      }, 2000);
     });
 
     return () => {
       clearInterval(intervalRef.current);
     };
-  }, []);
+  }, [isCapturing, threshold]);
 
   const handleCaptureClick = async () => {
     if (!videoRef.current) return;
@@ -180,39 +63,17 @@ export default function ImageCapture(props) {
         video: true,
       });
       videoRef.current.srcObject = stream;
-      videoRef.current.play();
-      setIsCapturing(true);
+      videoRef.current.onloadeddata = ()=>{
+        videoRef.current.play();
+        setIsCapturing(true);
+      }
     } catch (error) {
       console.error("Error accessing camera:", error);
     }
   };
 
-  useEffect(() => {
-    handleCaptureClick();
-
-    // Cleanup function to stop the video stream when component unmounts
-    return () => {
-      if (videoRef.current) {
-        const stream = videoRef.current.srcObject;
-        if (stream) {
-          const tracks = stream.getTracks();
-          tracks.forEach((track) => track.stop());
-        }
-      }
-    };
-  }, []);
-
-  const audio = new Audio("/deathnote-sound.mpeg");
-  useEffect(() => {
-    if (play) {
-      audioRef.current.play();
-    } else {
-      audioRef.current.pause();
-    }
-  }, [play]);
-
   const stopCapture = () => {
-    if (videoRef.current && isCapturing) {
+    if (videoRef.current) {
       const stream = videoRef.current.srcObject;
       if (stream) {
         const tracks = stream.getTracks();
@@ -224,35 +85,88 @@ export default function ImageCapture(props) {
     }
   };
 
+  useEffect(() => {
+    if (play) {
+      audioRef.current.play();
+    } else {
+      audioRef.current.pause();
+    }
+  }, [play]);
+
   return (
     <div className="container my-3 mt-4">
-      <video
-        ref={videoRef}
-        id="abc"
-        style={{ width: "100%", height: "auto" }}
-      />
-      <h2>Capturing Video Data</h2>
+      <h1>Capturing Video Data</h1>
       <div className="container my-3">
+        <div style={{display: "flex"}}>
         <div
           style={{
             width: "800px",
             height: "350px",
-            border: "2px solid",
+            border: "3px solid",
             boxShadow: "5px 5px 8px rgba(0, 0, 0, 2)",
             borderRadius: "8px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor:"whitesmoke"
           }}
         >
-          {show && data.length > 0 ? (
-            <pre>{JSON.stringify(data, null, 2)}</pre>
+          <video
+            ref={videoRef}
+            id="abc"
+            style={{
+              width: "100%",
+              height: "347px",
+              objectFit: "cover",
+              borderRadius: "6px",
+              display: isCapturing ? "flex" : "none",
+            }}
+          />
+          {isCapturing ? (
+            console.log("working!")
           ) : (
-            "Click on Start Capture to begin !"
+            <p
+            style={{
+              fontSize: "22px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              color: "black"
+            }}>Click on Start Capture to begin !</p>
           )}
+        </div>
+        <div>
+          <h2 className="mx-5">Prediction Data</h2>
+          <div className="flex"
+          style={{
+            height: "300px",
+            width: "320px",
+            border:"2px solid",
+            borderRadius: "8px",
+            marginLeft: "50px",
+            backgroundColor: "whitesmoke",
+            color: "black"
+          }}>
+            {isCapturing ? (
+              <pre className="mx-3 my-3">{JSON.stringify(data, null, 2)}</pre>
+            ) : (
+              <p
+              style={{
+                fontSize: "18px",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                marginTop: "10px",
+                color: 'black'
+              }}>No prediction data available :(</p>
+          )}
+          </div>
+        </div>
         </div>
         <button
           type="button"
           onClick={() => {
             setUrl("https://detect.roboflow.com/farm-animal-detection-ezvtk/2");
-            setShow(true);
             handleCaptureClick();
           }}
           className={`btn btn-${
@@ -266,7 +180,6 @@ export default function ImageCapture(props) {
           type="button"
           onClick={() => {
             setUrl("");
-            setShow(false);
             stopCapture(); // Call stopCapture function to stop the video capture
           }}
           className={`btn btn-${
@@ -276,6 +189,12 @@ export default function ImageCapture(props) {
         >
           Stop Capture
         </button>
+        <br />
+        <div className="w-25">
+          <label htmlFor="customRange3" className="form-label">Set Threshold</label>
+          <input onChange={(e)=>{setThreshold(e.target.value)}} type="range" className="form-range" min="0" max="1" step="0.05" value={threshold} id="customRange3"/>
+          {console.log(threshold)}
+        </div>
       </div>
     </div>
   );

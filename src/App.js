@@ -10,7 +10,6 @@ function App() {
   const toggleMode = () => {
     if (mode === 'dark') {
       setMode('light');
-      document.body.style.backgroundColor = 'whitesmoke';
       document.body.style.color = 'black';
     } else {
       setMode('dark');
@@ -28,7 +27,6 @@ function App() {
           <Route path="/about" element={<About mode={mode}/>}/>
         </Routes>
       </Router>
-      {/* <ImageCapture mode={mode} toggleMode={toggleMode}/> */}
     </div>
   );
 }

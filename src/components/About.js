@@ -8,11 +8,11 @@ export default function About(props) {
         <div className="accordion-item" style={{backgroundColor: props.mode === 'dark'?'#4e6983':'white', color:props.mode === 'dark'?'white':'black'}}>
           {console.log(props.mode)}
           <h2 className="accordion-header">
-            <button className="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
               <b>Introduction</b>
             </button>
           </h2>
-          <div id="collapseOne" className="accordion-collapse collapse show" data-bs-parent="#accordionExample">
+          <div id="collapseOne" className="accordion-collapse collapse" data-bs-parent="#accordionExample">
             <div className="accordion-body">
               In rural agricultural landscapes worldwide, the coexistence of farming activities and wildlife
               habitats presents significant challenges, particularly concerning crop damage. As agricultural
