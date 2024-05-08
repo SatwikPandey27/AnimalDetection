@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from "react";
 
 export default function ImageCapture(props) {
   const [data, setData] = useState([]);
-  const [url, setUrl] = useState("");
   const [isCapturing, setIsCapturing] = useState(false);
   const [play, setPlay] = useState(false);
   const videoRef = useRef();
@@ -166,7 +165,6 @@ export default function ImageCapture(props) {
         <button
           type="button"
           onClick={() => {
-            setUrl("https://detect.roboflow.com/farm-animal-detection-ezvtk/2");
             handleCaptureClick();
           }}
           className={`btn btn-${
@@ -179,7 +177,6 @@ export default function ImageCapture(props) {
         <button
           type="button"
           onClick={() => {
-            setUrl("");
             stopCapture(); // Call stopCapture function to stop the video capture
           }}
           className={`btn btn-${
